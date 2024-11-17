@@ -1,5 +1,6 @@
 import { User, Thought } from '../models/index.js';
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 
 export const createThought = async (req: Request, res: Response) => {
     try {
@@ -102,16 +103,37 @@ export const addReaction = async (req: Request, res: Response) => {
     }
 }
 
-export const removeReaction = async (req: Request, res: Response) => {
+export const removeReaction = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const thought = await Thought.findOneAndUpdate(
+        console.log(`Removing reaction with ID: ${req.params.reactionId} from thought ID: ${req.params.thoughtId}`);
+
+        // Check if the thought exists
+        const thought = await Thought.findById(req.params.thoughtId);
+        if (!thought) {
+            console.log('Thought not found');
+            return res.status(404).json({ message: 'Thought not found' });
+        }
+
+        // Check if the reaction exists
+        const reactionExists = thought.reactions.some(reaction => reaction.reactionId.toString() === req.params.reactionId);
+        if (!reactionExists) {
+            console.log('Reaction not found');
+            return res.status(404).json({ message: 'Reaction not found' });
+        }
+        // Log the current reactions
+        console.log('Current Reactions:', thought.reactions);
+        // Proceed to remove the reaction
+        const updatedThought = await Thought.findOneAndUpdate(
             { _id: req.params.thoughtId },
-            { $pull: { reactions: { reactionId: req.params.reactionId } } },
+            { $pull: { reactions: { reactionId: new mongoose.Types.ObjectId(req.params.reactionId) } } },
             { new: true }
         );
-        res.json(thought);
+
+        console.log('Updated Thought:', updatedThought);
+
+        return res.json(updatedThought);
     } catch (err) {
-        res.status(400).json(err);
+        console.error('Error removing reaction:', err);
+        return res.status(400).json(err);
     }
 }
-
