@@ -1,4 +1,25 @@
-import { Schema, model } from 'mongoose';
+import mongoose, { Schema, model } from 'mongoose';
+// Create the Reaction schema
+const ReactionSchema = new Schema({
+    reactionId: {
+        type: Schema.Types.ObjectId,
+        default: () => new mongoose.Types.ObjectId()
+    },
+    reactionBody: {
+        type: String,
+        required: true,
+        minlength: 1,
+        maxlength: 280
+    },
+    username: {
+        type: String,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
 const ThoughtSchema = new Schema({
     thoughtText: {
         type: String,
@@ -14,12 +35,7 @@ const ThoughtSchema = new Schema({
         type: String,
         required: true
     },
-    reactions: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'Reaction'
-        }
-    ]
+    reactions: [ReactionSchema]
 });
 ThoughtSchema.virtual('reactionCount').get(function () {
     return this.reactions.length;
@@ -32,6 +48,13 @@ Thought.create({
     thoughtText: 'test thought',
     createdAt: new Date(),
     username: 'testuser',
-    reactions: []
+    reactions: [
+        {
+            reactionId: new mongoose.Types.ObjectId(),
+            reactionBody: 'test reaction',
+            username: 'testuser',
+            createdAt: new Date()
+        }
+    ]
 });
 export default Thought;

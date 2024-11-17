@@ -1,10 +1,41 @@
-import { Schema, model, Document } from 'mongoose';
+import mongoose, { Schema, model, Document } from 'mongoose';
+
+
+// Define the Reaction interface
+interface IReaction extends Document {
+    reactionId: mongoose.Types.ObjectId; // The ID of the reaction
+    reactionBody: string; // The content of the reaction
+    username: string; // The user who made the reaction
+    createdAt: Date; // The date the reaction was created
+}
+
+// Create the Reaction schema
+const ReactionSchema = new Schema<IReaction>({
+    reactionId: {
+        type: Schema.Types.ObjectId,
+        default: () => new mongoose.Types.ObjectId()
+    },
+    reactionBody: {
+        type: String,
+        required: true,
+        minlength: 1,
+        maxlength: 280
+    },
+    username: {
+        type: String,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
 
 interface IThought extends Document {
     thoughtText: string;
     createdAt: Date;
     username: string;
-    reactions: string[];
+    reactions: IReaction[];
 }
 
 const ThoughtSchema = new Schema<IThought>({
@@ -22,12 +53,7 @@ const ThoughtSchema = new Schema<IThought>({
         type: String,
         required: true
     },
-    reactions: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'Reaction'
-        }
-    ]
+    reactions: [ReactionSchema]
 });
 
 ThoughtSchema.virtual('reactionCount').get(function(this: IThought) {
@@ -44,7 +70,15 @@ Thought.create({
     thoughtText: 'test thought',
     createdAt: new Date(),
     username: 'testuser',
-    reactions: []
+    reactions: [
+        {
+            reactionId: new mongoose.Types.ObjectId(),
+            reactionBody: 'test reaction',
+            username: 'testuser',
+            createdAt: new Date()
+        }
+    ]
 });
+
 
 export default Thought;
